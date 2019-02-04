@@ -16,7 +16,7 @@ class ListMovieComponent extends Component {
     }
 
     componentDidMount() {
-        this.props.loadMovieList(this.state.page,this.state.inputValue);
+        this.props.loadMovieList(this.state.page, this.state.inputValue);
         this.props.loadGenreList();
     }
 
@@ -86,12 +86,13 @@ class ListMovieComponent extends Component {
     }
 
     handleSubmit = () => {
-        this.props.loadMovieList(this.state.page,this.state.inputValue);
+        this.setState({ moviesList: [] })
+        this.props.loadMovieList(1, this.state.inputValue);
     }
 
     handleClick = () => {
         this.setState({ page: this.state.page + 1 }, () => {
-            this.props.loadMovieList(this.state.page,this.state.inputValue);
+            this.props.loadMovieList(this.state.page, this.state.inputValue);
         });
     }
 
@@ -133,7 +134,7 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        loadMovieList: (page,rating) => {
+        loadMovieList: (page, rating) => {
             dispatch(loadMovieList(page, rating))
         },
         loadGenreList: () => {
