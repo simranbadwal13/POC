@@ -11,6 +11,7 @@ class ListMovieComponent extends Component {
             showSpinner: true,
             genre: '',
             moviesList: [],
+            filteredMovieList: [],
             genreList: [],
             page: 1,
             inputValue: 3
@@ -37,7 +38,8 @@ class ListMovieComponent extends Component {
                 }
                 else {
                     this.setState({
-                        moviesList: newProps.allData.moviesData.data.results
+                        moviesList: newProps.allData.moviesData.data.results,
+                        filteredMovieList: newProps.allData.moviesData.data.results
                     })
                 }
             }
@@ -72,7 +74,7 @@ class ListMovieComponent extends Component {
                         <div className="col-lg-3">
                             <div>
                                 <label>
-                                    Rating: 
+                                    Rating:
                                     <input className="ml-input-box"
                                         value={this.state.inputValue}
                                         type="number"
@@ -89,11 +91,11 @@ class ListMovieComponent extends Component {
                         </div>
                         <div className="col-lg-9">
                             <div>
-                                {this.renderMovieList(this.state.moviesList)}
+                                {this.renderMovieList(this.state.filteredMovieList)}
                             </div>
-                            <div className="ml-load-more">
+                            {/* <div className="ml-load-more">
                                 <button className="btn btn-primary" onClick={this.handleClick}>Load More</button>
-                            </div>
+                            </div> */}
                         </div>
                     </div>
                 }
@@ -134,11 +136,35 @@ class ListMovieComponent extends Component {
         });
     }
 
+    scrollToTop = () => {
+        document.body.scrollTop = 0; // For Safari
+        document.documentElement.scrollTop = 0; // For Chrome, Firefox, IE and Opera
+    }
+
     handleSubmit = () => {
         const genreSelectedList = this.state.genreList.filter((word) => word.checked === true).map((arr) => { return arr['id']; });
-        const genre = genreSelectedList.join(',');
-        this.setState({ moviesList: [], genre })
-        this.props.loadMovieList(1, this.state.inputValue, genre);
+        // const genre = genreSelectedList.join(',');
+        // this.setState({ moviesList: [], genre })
+        // this.props.loadMovieList(1, this.state.inputValue, genre);
+        const filterMovie = this.state.moviesList.filter((movie) => (movie.vote_average >= this.state.inputValue && this.arraysEqual(genreSelectedList, movie.genre_ids)));
+        this.setState({ filteredMovieList: filterMovie });
+        this.scrollToTop();
+    }
+
+    arraysEqual = (arr1, arr2) => {
+        let result = [];
+        if (arr1.length === 0)
+            return true;
+        for (var i = arr1.length; i--;) {
+            if (arr2.includes(arr1[i]))
+                result.push(true);
+        }
+        if (result.includes(false) || result.length === 0) {
+            return false;
+        }
+        else if (arr1.length === result.length) {
+            return true;
+        }
     }
 
     handleClick = () => {
@@ -148,6 +174,12 @@ class ListMovieComponent extends Component {
     }
 
     renderMovieList = (movies) => {
+        if (movies.length === 0) {
+            return (
+                <div className="ml-nothing-to-show">
+                    There is nothing to show.
+            </div>)
+        }
         const list = movies.map(movie => {
             return (
                 <div className="card ml-movie-card" key={movie.id}>
