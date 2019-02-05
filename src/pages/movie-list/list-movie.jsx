@@ -24,11 +24,10 @@ class ListMovieComponent extends Component {
     }
 
     componentWillReceiveProps(newProps) {
-        if ('Initiated' === newProps.allData.moviesData.status) {
+        if (this.anyRequestStarted(newProps.allData.moviesData, newProps.allData.genreData)) {
             this.setState({ showSpinner: true });
         }
-        if ('Success' === newProps.allData.moviesData.status ||
-            'Failure' === newProps.allData.moviesData.status) {
+        if (this.allRequestsFinished(newProps.allData.moviesData, newProps.allData.genreData)) {
             this.setState({ showSpinner: false });
             if ('Success' === newProps.allData.moviesData.status) {
                 if (this.state.page > 1) {
@@ -43,7 +42,7 @@ class ListMovieComponent extends Component {
                     })
                 }
             }
-            if ('Success' === newProps.allData.genreData.status && this.props.allData.genreData.status !== newProps.allData.genreData.status) {
+            if ('Success' === newProps.allData.genreData.status) {
                 newProps.allData.genreData.data.genres.map((checkbox) => {
                     checkbox.checked = false;
                 });
@@ -186,12 +185,28 @@ class ListMovieComponent extends Component {
                     <img className="card-img-top" src={`https://image.tmdb.org/t/p/w370_and_h556_bestv2${movie.poster_path}`} alt="Card image cap" />
                     <div className="card-body">
                         <h5 className="card-title">{movie.title}</h5>
-                        <p className="card-text">{movie.overview}</p>
+                        <div className="ml-genre">
+                            <p className="ml-genre-head">Genre:</p>
+                            <p className="ml-genre-body">{this.loadGenreView(movie.genre_ids)}</p>
+                        </div>
+                        <div className="ml-rating">
+                            <p className="ml-rating-head">Rating:</p>
+                            <p className="ml-rating-body">{movie.vote_average}</p>
+                        </div>
+                        {<p className="card-text">{movie.overview}</p>}
                     </div>
                 </div>
             );
         });
         return (list);
+    }
+
+    loadGenreView = (genre_ids) => {
+        const list = this.state.genreList;
+        const sim = genre_ids.map((mov_genre) => {
+            return this.state.genreList.find(genre => genre.id === mov_genre);
+        }).map((arr) => { return arr['name']; });;
+        return sim.join(", ");
     }
 
     renderFormLabel = () => {
@@ -207,6 +222,17 @@ class ListMovieComponent extends Component {
         return (
             <CheckBoxList ref="chkboxList" defaultData={labels} onChange={this.handleCheckboxListChange} />
         );
+    }
+
+    anyRequestStarted = (...requests) => {
+        return requests.length > 0 &&
+            requests.some((r) => r.status === 'Initiated');
+    }
+
+    allRequestsFinished = (...requests) => {
+        return requests.length > 0 &&
+            requests.every((r) => r.status === 'Failure' ||
+                r.status === 'Success');
     }
 }
 
