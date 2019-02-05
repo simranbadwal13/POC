@@ -9,14 +9,16 @@ class ListMovieComponent extends Component {
         super(props);
         this.state = {
             showSpinner: true,
+            genre: '',
             moviesList: [],
+            genreList: [],
             page: 1,
             inputValue: 3
         };
     }
 
     componentDidMount() {
-        this.props.loadMovieList(this.state.page, this.state.inputValue);
+        this.props.loadMovieList(this.state.page, this.state.inputValue, this.state.genre);
         this.props.loadGenreList();
     }
 
@@ -39,6 +41,14 @@ class ListMovieComponent extends Component {
                     })
                 }
             }
+            if ('Success' === newProps.allData.genreData.status && this.props.allData.genreData.status !== newProps.allData.genreData.status) {
+                newProps.allData.genreData.data.genres.map((checkbox) => {
+                    checkbox.checked = false;
+                });
+                this.setState({
+                    genreList: newProps.allData.genreData.data.genres
+                })
+            }
         }
     }
 
@@ -58,25 +68,54 @@ class ListMovieComponent extends Component {
                         >
                         </OverlayLoader>
                     </div> :
-                    <div>
-                        <div>
-                            <input className="ml-input-box"
-                                value={this.state.inputValue}
-                                type="number"
-                                min='3' max='10' step='0.5'
-                                onChange={this.updateInputValue} />
-                            <button className="btn btn-primary ml-submit-button" onClick={this.handleSubmit}>Submit</button>
+                    <div className="row">
+                        <div className="col-lg-3">
+                            <div>
+                                <label>
+                                    Rating: 
+                                    <input className="ml-input-box"
+                                        value={this.state.inputValue}
+                                        type="number"
+                                        min='3' max='10' step='0.5'
+                                        onChange={this.updateInputValue} />
+                                </label>
+                            </div>
+                            <div className="ml-check-box-container">
+                                {this.renderCheckBoxes()}
+                            </div>
+                            <div>
+                                <button className="btn btn-primary" onClick={this.handleSubmit}>Submit</button>
+                            </div>
                         </div>
-                        <div>
-                            {this.renderMovieList(this.state.moviesList)}
-                        </div>
-                        <div className="ml-load-more">
-                            <button className="btn btn-primary" onClick={this.handleClick}>Load More</button>
+                        <div className="col-lg-9">
+                            <div>
+                                {this.renderMovieList(this.state.moviesList)}
+                            </div>
+                            <div className="ml-load-more">
+                                <button className="btn btn-primary" onClick={this.handleClick}>Load More</button>
+                            </div>
                         </div>
                     </div>
                 }
             </div>
         );
+    }
+
+    renderCheckBoxes = () => {
+        const { genreList } = this.state;
+        return genreList.map((checkbox, index) =>
+            <div key={index} className="ml-check-box-width">
+                <label>
+                    <input
+                        className="ml-input-check-box"
+                        type="checkbox"
+                        checked={checkbox.checked}
+                        onChange={() => this.toggleCheckbox(index)}
+                    />
+                    {checkbox.name}
+                </label>
+            </div>
+        )
     }
 
     updateInputValue = (evt) => {
@@ -85,14 +124,26 @@ class ListMovieComponent extends Component {
         });
     }
 
+    toggleCheckbox = (index) => {
+        const { genreList } = this.state;
+
+        genreList[index].checked = !genreList[index].checked;
+
+        this.setState({
+            genreList
+        });
+    }
+
     handleSubmit = () => {
-        this.setState({ moviesList: [] })
-        this.props.loadMovieList(1, this.state.inputValue);
+        const genreSelectedList = this.state.genreList.filter((word) => word.checked === true).map((arr) => { return arr['id']; });
+        const genre = genreSelectedList.join(',');
+        this.setState({ moviesList: [], genre })
+        this.props.loadMovieList(1, this.state.inputValue, genre);
     }
 
     handleClick = () => {
         this.setState({ page: this.state.page + 1 }, () => {
-            this.props.loadMovieList(this.state.page, this.state.inputValue);
+            this.props.loadMovieList(this.state.page, this.state.inputValue, this.state.genre);
         });
     }
 
@@ -110,6 +161,7 @@ class ListMovieComponent extends Component {
         });
         return (list);
     }
+
     renderFormLabel = () => {
         const isSuccess = this.props.allData.genreData.status === 'Success';
         const labels = isSuccess && this.props.allData.genreData.data.genres.map(label => {
@@ -134,8 +186,8 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        loadMovieList: (page, rating) => {
-            dispatch(loadMovieList(page, rating))
+        loadMovieList: (page, rating, genre) => {
+            dispatch(loadMovieList(page, rating, genre))
         },
         loadGenreList: () => {
             dispatch(loadGenreList())
